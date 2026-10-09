@@ -77,7 +77,8 @@ export function CardContent({ item, index = 0, editing = false, withLayoutIds = 
         {ring}
       </div>
       {info}
-      <div className={cn('relative mt-auto', big ? 'pt-8' : 'pt-6')}>{body}</div>
+      {/* En la tarjeta grande la visualización ocupa y se centra en el espacio libre */}
+      <div className={cn('relative', big ? 'flex flex-1 flex-col justify-center pt-8' : 'mt-auto pt-6')}>{body}</div>
     </div>
   );
 }

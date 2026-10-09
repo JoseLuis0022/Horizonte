@@ -4,7 +4,7 @@ import { cn } from '../lib/cn';
 import { spring, springSnappy } from '../lib/motion';
 
 // Glifos mini de cada estilo, dibujados con el color del tema.
-function Glyph({ k, theme }) {
+export function Glyph({ k, theme }) {
   const c = theme.from;
   const soft = `${theme.from}33`;
   switch (k) {

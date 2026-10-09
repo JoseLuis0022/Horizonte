@@ -44,7 +44,8 @@ un grid tipo bento — todo con microinteracciones y motion design al estilo de 
    destacado; también puedes **ordenar por fecha** con un toque.
 4. **Crear y editar sin fricción** — la ventana emerge desde el botón que la abrió y tiene vista
    previa en vivo con el estilo, color e icono que elijas. **Selectores propios** de fecha
-   (calendario con cambio de mes por swipe) y de hora (rueda 3D estilo iOS), más atajos rápidos.
+   (calendario con cambio de mes por swipe) y de hora (rueda 3D estilo iOS en formato de 12 horas
+   que se actualiza mientras la deslizas), más atajos rápidos: **Hoy** abre directo la rueda de la hora.
 5. **Detalle** — al tocar una tarjeta se expande hasta ocupar la pantalla (shared element
    transition), con el countdown en grande, el progreso, el selector de estilo y las acciones
    Destacar / Editar / Eliminar (con **Deshacer**).
@@ -52,7 +53,8 @@ un grid tipo bento — todo con microinteracciones y motion design al estilo de 
 7. **Se adapta a cualquier pantalla** — del teléfono a un monitor de 27": el grid pasa de 1 a 6
    columnas, en pantallas anchas aparece junto al Hero una columna **Después** con los siguientes
    countdowns, y los números grandes escalan con *container queries* según el espacio real de cada
-   tarjeta.
+   tarjeta. La columna **Después** muestra el tiempo restante en vivo (horas y minutos si falta
+   menos de un día), el estilo con que se cuenta cada uno y su progreso.
 8. **Todo local** — los countdowns, su orden, tamaño y el destacado se guardan en tu navegador
    (`localStorage`); no hay cuentas ni servidor.
 

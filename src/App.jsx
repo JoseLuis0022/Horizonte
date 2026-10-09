@@ -49,7 +49,7 @@ export default function App() {
   const later = upcoming
     .filter((c) => c.id !== heroItem?.id)
     .sort((a, b) => a.target - b.target)
-    .slice(0, 4);
+    .slice(0, 5);
   const selectedItem = selected && items.find((c) => c.id === selected.id);
   const activeItem = activeId && items.find((c) => c.id === activeId);
 
@@ -141,12 +141,20 @@ export default function App() {
           </AnimatePresence>
           {later.length > 0 && (
             <div className="hidden xl:flex">
-              <UpNext items={later} onOpen={(id) => setSelected({ id, origin: 'upnext' })} />
+              <UpNext
+                items={later}
+                total={items.length}
+                onOpen={(id) => setSelected({ id, origin: 'upnext' })}
+                onSeeAll={() => {
+                  setFilter('all');
+                  document.getElementById('countdowns')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+              />
             </div>
           )}
         </section>
 
-        <motion.section aria-label="Todos los countdowns" variants={screenEnter} custom={2} initial="hidden" animate="visible" className="mt-12">
+        <motion.section id="countdowns" aria-label="Todos los countdowns" style={{ scrollMarginTop: 72 }} variants={screenEnter} custom={2} initial="hidden" animate="visible" className="mt-12">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="font-ui text-22">Tus countdowns</h2>
             <div className="flex flex-wrap items-center gap-2">
@@ -175,7 +183,7 @@ export default function App() {
             onDragCancel={endDrag}
           >
             <SortableContext items={visible.map((c) => c.id)} strategy={noStrategy}>
-              <div className="mt-6 grid grid-cols-1 gap-4 [grid-auto-flow:dense] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-[1900px]:grid-cols-5 min-[2300px]:grid-cols-6">
+              <div className="mt-6 grid grid-cols-1 gap-4 [grid-auto-flow:dense] [grid-auto-rows:1fr] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-[1900px]:grid-cols-5 min-[2300px]:grid-cols-6">
                 <AnimatePresence mode="popLayout">
                   {visible.length === 0 ? (
                     <EmptyState key={`empty-${filter}`} filter={filter} onCreate={openCreate} />

@@ -17,7 +17,7 @@ const parse = (s) => {
 
 // Calendario propio: el mes entra deslizándose en la dirección de navegación,
 // se puede cambiar de mes arrastrando, y la selección viaja con layoutId.
-export function DatePicker({ value, onChange, onDone }) {
+export function DatePicker({ value, onChange, onDone, onToday }) {
   const selected = value ? parse(value) : new Date();
   const [view, setView] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1));
   const [dir, setDir] = useState(0);
@@ -159,7 +159,7 @@ export function DatePicker({ value, onChange, onDone }) {
             type="button"
             whileTap={{ scale: 0.94 }}
             transition={springSnappy}
-            onClick={() => pick(new Date(Date.now() + days * DAY))}
+            onClick={() => (days === 0 && onToday ? onToday() : pick(new Date(Date.now() + days * DAY)))}
             className="h-9 shrink-0 rounded-full bg-text-1/[0.05] px-4 font-ui text-13 font-semibold text-text-2 transition-colors hover:bg-accent-soft hover:text-accent"
           >
             {label}

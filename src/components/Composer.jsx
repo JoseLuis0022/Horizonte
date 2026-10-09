@@ -18,6 +18,7 @@ import { emerge, originOffset } from '../lib/origin';
 function presets(now) {
   const d = new Date(now);
   return [
+    { label: 'Hoy', today: true },
     { label: 'Mañana', ts: now + DAY },
     { label: '1 semana', ts: now + 7 * DAY },
     { label: '1 mes', ts: new Date(d.getFullYear(), d.getMonth() + 1, d.getDate(), d.getHours(), d.getMinutes()).getTime() },
@@ -42,6 +43,11 @@ export function Composer({ initial, origin, onClose, onSave }) {
   const [touched, setTouched] = useState(false);
   const [picker, setPicker] = useState(null); // { kind: 'date' | 'time', origin }
   const closePicker = useCallback(() => setPicker(null), []);
+  // "Hoy" fija la fecha y abre de inmediato la rueda de la hora.
+  const pickToday = useCallback(() => {
+    setDate(toInputs(Date.now()).date);
+    setPicker({ kind: 'time', origin: originOffset(document.querySelector('[data-time-field]')) });
+  }, []);
 
   const theme = getTheme(themeKey);
   const target = fromInputs(date, time);
@@ -118,6 +124,7 @@ export function Composer({ initial, origin, onClose, onSave }) {
             <PickerField
               label="Hora"
               icon={Clock3}
+              dataAttr="data-time-field"
               onClick={(e) => setPicker({ kind: 'time', origin: originOffset(e.currentTarget) })}
               text={formatTime(fromInputs('2000-01-01', time))}
             />
@@ -131,6 +138,7 @@ export function Composer({ initial, origin, onClose, onSave }) {
                 whileTap={{ scale: 0.94 }}
                 transition={springSnappy}
                 onClick={() => {
+                  if (pr.today) return pickToday();
                   const v = toInputs(pr.ts);
                   setDate(v.date);
                   setTime(v.time);
@@ -138,28 +146,6 @@ export function Composer({ initial, origin, onClose, onSave }) {
                 className="h-9 shrink-0 rounded-full bg-text-1/[0.05] px-4 font-ui text-13 font-semibold text-text-2 transition-colors hover:bg-accent-soft hover:text-accent"
               >
                 {pr.label}
-              </motion.button>
-            ))}
-          </div>
-
-          <span className="mb-2 mt-6 block font-ui text-13 font-semibold text-text-2">Icono</span>
-          <div className="grid grid-cols-8 gap-1">
-            {EMOJIS.map((e) => (
-              <motion.button
-                key={e}
-                type="button"
-                aria-label={`Icono ${e}`}
-                aria-pressed={e === emoji}
-                onClick={() => setEmoji(e)}
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.85 }}
-                transition={springSnappy}
-                className="relative flex aspect-square items-center justify-center rounded-control text-[22px]"
-              >
-                {e === emoji && (
-                  <motion.span layoutId="emoji-sel" transition={spring} className="absolute inset-0 rounded-control bg-text-1/[0.08]" />
-                )}
-                <span className="relative">{e}</span>
               </motion.button>
             ))}
           </div>
@@ -185,6 +171,28 @@ export function Composer({ initial, origin, onClose, onSave }) {
                   <motion.span layoutId="theme-sel" transition={spring} className="absolute inset-0 rounded-full border-2" style={{ borderColor: THEMES[k].from }} />
                 )}
                 <span className="h-8 w-8 rounded-full shadow-1" style={{ background: gradient(THEMES[k]) }} />
+              </motion.button>
+            ))}
+          </div>
+
+          <span className="mb-2 mt-6 block font-ui text-13 font-semibold text-text-2">Icono</span>
+          <div className="grid grid-cols-8 gap-1">
+            {EMOJIS.map((e) => (
+              <motion.button
+                key={e}
+                type="button"
+                aria-label={`Icono ${e}`}
+                aria-pressed={e === emoji}
+                onClick={() => setEmoji(e)}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.85 }}
+                transition={springSnappy}
+                className="relative flex aspect-square items-center justify-center rounded-control text-[22px]"
+              >
+                {e === emoji && (
+                  <motion.span layoutId="emoji-sel" transition={spring} className="absolute inset-0 rounded-control bg-text-1/[0.08]" />
+                )}
+                <span className="relative">{e}</span>
               </motion.button>
             ))}
           </div>
@@ -215,7 +223,7 @@ export function Composer({ initial, origin, onClose, onSave }) {
       </motion.form>
 
       <PickerModal open={picker?.kind === 'date'} origin={picker?.origin} onClose={closePicker}>
-        <DatePicker value={date} onChange={setDate} onDone={closePicker} />
+        <DatePicker value={date} onChange={setDate} onDone={closePicker} onToday={pickToday} />
       </PickerModal>
       <PickerModal open={picker?.kind === 'time'} origin={picker?.origin} onClose={closePicker}>
         <TimePicker value={time} onChange={setTime} onDone={closePicker} />
@@ -224,12 +232,13 @@ export function Composer({ initial, origin, onClose, onSave }) {
   );
 }
 
-function PickerField({ label, icon: Icon, text, onClick }) {
+function PickerField({ label, icon: Icon, text, onClick, dataAttr }) {
   return (
     <div className="min-w-0">
       <span className="mb-2 block font-ui text-13 font-semibold text-text-2">{label}</span>
       <motion.button
         type="button"
+        {...(dataAttr ? { [dataAttr]: '' } : {})}
         onClick={onClick}
         whileTap={{ scale: 0.97 }}
         transition={springSnappy}

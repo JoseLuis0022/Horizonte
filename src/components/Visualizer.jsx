@@ -191,8 +191,11 @@ function DotsViz({ t, p, theme, size, item }) {
     <div className="flex flex-col gap-3">
       <DotGrid n={n} filled={filled} from={theme.from} to={theme.to} lg={lg} />
       <div className="flex items-end justify-between gap-2">
-        <BigDays t={t} className={lg ? 'text-[clamp(48px,12cqi,120px)]' : 'text-[32px]'} />
-        <span className="font-ui text-12 font-semibold text-text-3">{perDay ? '1 punto = 1 día' : '1 punto = 1 %'}</span>
+        <div className="flex flex-col gap-1">
+          <BigDays t={t} className={lg ? 'text-[clamp(48px,12cqi,120px)]' : 'text-[32px]'} />
+          <Clock t={t} className={lg ? 'text-22' : 'text-15'} />
+        </div>
+        <span className="pb-0.5 font-ui text-12 font-semibold text-text-3">{perDay ? '1 punto = 1 día' : '1 punto = 1 %'}</span>
       </div>
     </div>
   );
@@ -261,7 +264,12 @@ function ColumnsViz({ t, theme, size, item }) {
 /* ───────────── Arco (medidor) ───────────── */
 function ArcViz({ t, p, theme, size }) {
   const lg = size === 'lg';
-  const gauge = <ArcGauge p={p} from={theme.from} to={theme.to} lg={lg} />;
+  const gauge = (
+    <svg viewBox="0 0 200 108" className={cn('overflow-visible', lg ? 'w-full max-w-[520px]' : 'w-36 shrink-0')}>
+      <ArcTicks p={p} from={theme.from} to={theme.to} lg={lg} />
+      <SecondHand seconds={t.done ? 0 : t.seconds} color={theme.to} lg={lg} />
+    </svg>
+  );
   if (lg) {
     return (
       <div className="flex flex-col items-center">
@@ -285,7 +293,27 @@ function ArcViz({ t, p, theme, size }) {
   );
 }
 
-const ArcGauge = memo(function ArcGauge({ p, from, to, lg }) {
+// Segundero: el arco interior se llena con los segundos del minuto en curso.
+function SecondHand({ seconds, color, lg }) {
+  const frac = (60 - seconds) / 60;
+  return (
+    <g>
+      <path d="M 44 100 A 56 56 0 0 1 156 100" fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={lg ? 4 : 6} strokeLinecap="round" />
+      <motion.path
+        d="M 44 100 A 56 56 0 0 1 156 100"
+        fill="none"
+        stroke={color}
+        strokeWidth={lg ? 4 : 6}
+        strokeLinecap="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: Math.max(0.001, frac) }}
+        transition={{ type: 'spring', stiffness: 140, damping: 20 }}
+      />
+    </g>
+  );
+}
+
+const ArcTicks = memo(function ArcTicks({ p, from, to, lg }) {
   const theme = { from, to };
   const n = lg ? 48 : 32;
   const lit = Math.round(p * (n - 1));
@@ -293,7 +321,7 @@ const ArcGauge = memo(function ArcGauge({ p, from, to, lg }) {
   const knobDeg = 180 + p * 180;
   const [kx, ky] = polar(knobDeg, 70);
   return (
-    <svg viewBox="0 0 200 108" className={cn('overflow-visible', lg ? 'w-full max-w-[520px]' : 'w-36 shrink-0')}>
+    <g>
       {Array.from({ length: n }, (_, i) => {
         const deg = 180 + (i / (n - 1)) * 180;
         const [x1, y1] = polar(deg, 80);
@@ -317,7 +345,6 @@ const ArcGauge = memo(function ArcGauge({ p, from, to, lg }) {
           />
         );
       })}
-      <path d="M 40 100 A 60 60 0 0 1 160 100" fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth="2" strokeDasharray="2 4" />
       <motion.circle
         r={lg ? 6 : 9}
         fill="#fff"
@@ -327,66 +354,113 @@ const ArcGauge = memo(function ArcGauge({ p, from, to, lg }) {
         animate={{ cx: kx, cy: ky }}
         transition={{ type: 'spring', stiffness: 60, damping: 16, delay: 0.3 }}
       />
-    </svg>
+    </g>
   );
 });
 
 /* ───────────── Semanas (calendario) ───────────── */
+// Índice de día en hora LOCAL (no UTC), para que "hoy" y el día de la
+// semana coincidan con el calendario del usuario.
+const localDay = (ts) => (ts - new Date(ts).getTimezoneOffset() * 60_000) / DAY;
+
 function WeeksViz({ t, theme, size, item }) {
   const lg = size === 'lg';
   const now = item.target - t.total;
   const maxWeeks = lg ? 26 : 14;
-  const startDay = Math.floor(item.createdAt / DAY);
-  const endDay = Math.ceil(item.target / DAY);
+  const startDay = Math.floor(localDay(item.createdAt));
+  const endDay = Math.ceil(localDay(item.target));
   const windowStart = Math.max(startDay, endDay - maxWeeks * 7);
-  const today = Math.floor(now / DAY);
+  const today = Math.floor(localDay(now));
   const total = Math.max(7, endDay - windowStart);
   const weeks = Math.ceil(total / 7);
+  const w = Math.floor(t.days / 7);
+  const d = t.days % 7;
 
   return (
     <div className="flex flex-col gap-3">
       <WeekGrid weeks={weeks} windowStart={windowStart} endDay={endDay} today={today} from={theme.from} to={theme.to} lg={lg} />
       <div className="flex items-end justify-between gap-2">
-        <BigDays t={t} className={lg ? 'text-[clamp(48px,12cqi,120px)]' : 'text-[32px]'} />
-        <span className="font-ui text-12 font-semibold text-text-3">{lg ? 'Cada cuadro es un día · la meta va enmarcada' : '1 cuadro = 1 día'}</span>
+        <div className="flex flex-col gap-1">
+          <span className="flex items-baseline gap-1.5">
+            {w > 0 && (
+              <>
+                <NumericText value={w} className={cn('font-ui font-semibold leading-none tracking-tight', lg ? 'text-[clamp(44px,10cqi,96px)]' : 'text-[30px]')} />
+                <span className="mr-1 font-ui text-15 font-medium text-text-2">{w === 1 ? 'sem' : 'sems'}</span>
+              </>
+            )}
+            <NumericText value={d} className={cn('font-ui font-semibold leading-none tracking-tight', lg ? 'text-[clamp(44px,10cqi,96px)]' : 'text-[30px]')} />
+            <span className="font-ui text-15 font-medium text-text-2">{unit(d)}</span>
+          </span>
+          <Clock t={t} className={lg ? 'text-22' : 'text-15'} />
+        </div>
+        <span className="pb-0.5 text-right font-ui text-12 font-semibold text-text-3">{lg ? 'Cada cuadro es un día · la meta va enmarcada' : '1 cuadro = 1 día'}</span>
       </div>
     </div>
   );
 }
 
+const WEEKDAYS = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+
+// Pocas semanas → calendario (cada fila es una semana). Muchas → mapa tipo
+// GitHub (cada columna es una semana). En ambos el cuadro tiene tamaño fijo:
+// nunca se estira a todo el ancho aunque la tarjeta sea enorme.
 const WeekGrid = memo(function WeekGrid({ weeks, windowStart, endDay, today, from, to, lg }) {
   const theme = { from, to };
+  const calendar = weeks <= (lg ? 8 : 4);
+  const cell = calendar ? (lg ? 34 : 16) : lg ? 16 : 12;
+  const gap = calendar ? (lg ? 6 : 3) : lg ? 4 : 3;
+  // En calendario se alinea al día de la semana real del primer día.
+  const offset = calendar ? new Date(windowStart * DAY).getUTCDay() : 0;
+  const count = calendar ? Math.ceil((offset + (endDay - windowStart)) / 7) * 7 : weeks * 7;
+
   return (
+    <div className={cn('flex flex-col gap-1.5', lg && 'items-center')}>
+      {calendar && lg && (
+        <div className="grid" style={{ gridTemplateColumns: `repeat(7, ${cell}px)`, gap }}>
+          {WEEKDAYS.map((wd, i) => (
+            <span key={i} className="text-center font-ui text-12 font-semibold text-text-3">
+              {wd}
+            </span>
+          ))}
+        </div>
+      )}
       <div
-        className="grid grid-flow-col"
-        style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))', gridTemplateColumns: `repeat(${weeks}, minmax(0, 1fr))`, gap: lg ? 5 : 3 }}
+        className={cn('grid', !calendar && 'grid-flow-col')}
+        style={
+          calendar
+            ? { gridTemplateColumns: `repeat(7, ${cell}px)`, gap }
+            : { gridTemplateRows: `repeat(7, ${cell}px)`, gridTemplateColumns: `repeat(${weeks}, ${cell}px)`, gap }
+        }
       >
-        {Array.from({ length: weeks * 7 }, (_, i) => {
-          const day = windowStart + i;
-          const exists = day < endDay;
+        {Array.from({ length: count }, (_, i) => {
+          const day = windowStart + i - offset;
+          const exists = day >= windowStart && day < endDay;
           const past = day < today;
           const isToday = day === today;
           const isGoal = day === endDay - 1;
           return (
             <motion.span
               key={i}
-              className="relative aspect-square"
+              className="relative"
               style={{
-                borderRadius: lg ? 4 : 3,
-                background: !exists ? 'transparent' : past ? lerpColor(theme.from, theme.to, i / (weeks * 7)) : 'rgba(0,0,0,0.07)',
-                boxShadow: isGoal ? `inset 0 0 0 2px ${theme.to}` : undefined,
+                width: cell,
+                height: cell,
+                borderRadius: calendar ? cell * 0.28 : lg ? 4 : 3,
+                background: !exists ? 'transparent' : past ? lerpColor(theme.from, theme.to, i / count) : 'rgba(0,0,0,0.07)',
+                boxShadow: exists && isGoal ? `inset 0 0 0 2px ${theme.to}` : undefined,
               }}
               initial={{ opacity: 0, scale: 0.4 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ ...springSoft, delay: 0.1 + Math.floor(i / 7) * 0.03 + (i % 7) * 0.01 }}
+              transition={{ ...springSoft, delay: 0.1 + i * 0.008 }}
             >
-              {isToday && (
+              {exists && isToday && (
                 <span className="absolute inset-0" style={{ borderRadius: 'inherit', background: theme.from, animation: 'pulse-cell 1.4s ease-in-out infinite' }} />
               )}
             </motion.span>
           );
         })}
       </div>
+    </div>
   );
 });
 
