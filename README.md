@@ -49,12 +49,18 @@ un grid tipo bento — todo con microinteracciones y motion design al estilo de 
    transition), con el countdown en grande, el progreso, el selector de estilo y las acciones
    Destacar / Editar / Eliminar (con **Deshacer**).
 6. **Celebración** — cuando un countdown llega a cero, una ráfaga de confeti en su color.
-7. **Todo local** — los countdowns, su orden, tamaño y el destacado se guardan en tu navegador
+7. **Se adapta a cualquier pantalla** — del teléfono a un monitor de 27": el grid pasa de 1 a 6
+   columnas, en pantallas anchas aparece junto al Hero una columna **Después** con los siguientes
+   countdowns, y los números grandes escalan con *container queries* según el espacio real de cada
+   tarjeta.
+8. **Todo local** — los countdowns, su orden, tamaño y el destacado se guardan en tu navegador
    (`localStorage`); no hay cuentas ni servidor.
 
 ## 📸 Capturas
 
 <div align="center">
+<img src="screenshots/11-pantalla-ancha.jpg" width="820"/><br/><sub>Pantalla ancha: Hero destacado + columna «Después»</sub>
+<br/><br/>
 <table>
 <tr>
 <td align="center" width="33%"><img src="screenshots/01-hero.jpg" width="260"/><br/><sub>Hero — lo siguiente</sub></td>
@@ -91,6 +97,19 @@ capas, radios anidados, superficies de vidrio con `backdrop-filter`, targets tá
 `safe-area-inset` para iPhone. Toda la física de movimiento vive en un solo archivo
 ([`src/lib/motion.js`](src/lib/motion.js)) — springs interrumpibles, nunca curvas lineales — y se
 respeta `prefers-reduced-motion`.
+
+## ⚡ Rendimiento
+
+Pensado para ir a 120 fps en pantallas ProMotion, también en el modo Organizar:
+
+- **Un solo reloj como store externo** (`useSyncExternalStore`): solo los dígitos que corren se
+  re-renderizan cada segundo; `App`, el Hero y las tarjetas se enteran únicamente cuando un
+  countdown cruza el cero. Así los nodos con `layout` de Framer no re-miden el DOM en cada tick.
+- **Animaciones infinitas en CSS** (temblor, pulsos, halo): corren en el compositor, no en el hilo
+  principal.
+- **Cuadrículas memorizadas** (Puntitos, Semanas, Arco) y progreso redondeado a 0.1 %, para no
+  reiniciar animaciones por cambios imperceptibles.
+- Nada de `backdrop-filter` sobre elementos que se mueven ni de animaciones de `height`.
 
 ## 🏗️ Arquitectura
 
