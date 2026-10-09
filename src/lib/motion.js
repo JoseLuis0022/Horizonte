@@ -20,6 +20,7 @@ export const screenEnter = {
     opacity: 1,
     y: 0,
     filter: 'blur(0px)',
+    transitionEnd: { filter: 'none' },
     transition: { ...springSoft, delay: 0.08 + i * stagger.loose },
   }),
 };

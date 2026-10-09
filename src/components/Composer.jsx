@@ -29,7 +29,6 @@ const fieldClass =
   'h-12 w-full rounded-control border border-hairline bg-surface-2 px-4 font-ui text-17 text-text-1 outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-text-3 focus:border-accent focus:shadow-[0_0_0_4px_var(--accent-soft)]';
 
 export function Composer({ initial, origin, onClose, onSave }) {
-  const now = useNow();
   const editing = Boolean(initial?.id);
   const start = useMemo(() => toInputs(initial?.target ?? Date.now() + DAY), [initial]);
 
@@ -48,8 +47,6 @@ export function Composer({ initial, origin, onClose, onSave }) {
   const target = fromInputs(date, time);
   const validDate = Number.isFinite(target);
   const error = !title.trim() ? 'Ponle un nombre a tu countdown.' : !validDate ? 'Elige una fecha.' : null;
-  const t = breakdown(validDate ? target : now, now);
-  const p = validDate ? progress(createdAt, target, now) : 0;
 
   const submit = (e) => {
     e.preventDefault();
@@ -83,7 +80,7 @@ export function Composer({ initial, origin, onClose, onSave }) {
               transition={{ background: { duration: 0.5 }, scale: { duration: 6, repeat: Infinity, ease: 'easeInOut' } }}
               style={{ opacity: 0.25 }}
             />
-            <div className="relative flex items-center gap-3">
+            <div className="relative flex flex-wrap items-center gap-3">
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
                   key={emoji + themeKey}
@@ -95,13 +92,7 @@ export function Composer({ initial, origin, onClose, onSave }) {
                   <EmojiTile emoji={emoji} theme={theme} />
                 </motion.div>
               </AnimatePresence>
-              <div className="min-w-0">
-                <p className="truncate font-ui text-17 font-semibold">{title.trim() || 'Sin título'}</p>
-                <p className="font-ui text-13 text-text-2">{validDate ? relative(target, now) : 'Sin fecha'}</p>
-              </div>
-            </div>
-            <div className="relative mt-5">
-              <Visualizer style={style} item={{ target: validDate ? target : now, createdAt }} t={t} p={p} theme={theme} size="sm" />
+              <ComposerPreviewBody title={title} target={target} validDate={validDate} createdAt={createdAt} style={style} theme={theme} />
             </div>
           </div>
 
@@ -133,7 +124,7 @@ export function Composer({ initial, origin, onClose, onSave }) {
           </div>
 
           <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar">
-            {presets(now).map((pr) => (
+            {presets(Date.now()).map((pr) => (
               <motion.button
                 key={pr.label}
                 type="button"
@@ -248,5 +239,24 @@ function PickerField({ label, icon: Icon, text, onClick }) {
         <span className="truncate font-ui text-15 font-medium">{text}</span>
       </motion.button>
     </div>
+  );
+}
+
+// Lo único del composer que corre cada segundo: así sus indicadores con
+// layoutId (icono, color, estilo) no se re-miden en cada tick.
+function ComposerPreviewBody({ title, target, validDate, createdAt, style, theme }) {
+  const now = useNow();
+  const t = breakdown(validDate ? target : now, now);
+  const p = validDate ? progress(createdAt, target, now) : 0;
+  return (
+    <>
+      <div className="min-w-0 flex-1 basis-0">
+        <p className="truncate font-ui text-17 font-semibold">{title.trim() || 'Sin título'}</p>
+        <p className="font-ui text-13 text-text-2">{validDate ? relative(target, now) : 'Sin fecha'}</p>
+      </div>
+      <div className="relative mt-2 basis-full">
+        <Visualizer style={style} item={{ target: validDate ? target : now, createdAt }} t={t} p={p} theme={theme} size="sm" />
+      </div>
+    </>
   );
 }

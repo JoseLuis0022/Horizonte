@@ -16,7 +16,7 @@ export const EmptyState = forwardRef(function EmptyState({ filter, onCreate }, r
     <motion.div
       ref={ref}
       initial={{ opacity: 0, scale: 0.96, filter: 'blur(8px)' }}
-      animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+      animate={{ opacity: 1, scale: 1, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }}
       exit={{ opacity: 0, scale: 0.96, filter: 'blur(8px)' }}
       transition={springSoft}
       className="col-span-full flex flex-col items-center py-16 text-center"

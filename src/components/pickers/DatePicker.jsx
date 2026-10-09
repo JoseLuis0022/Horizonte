@@ -63,7 +63,7 @@ export function DatePicker({ value, onChange, onDone }) {
               custom={dir}
               variants={{
                 enter: (d) => ({ y: d >= 0 ? 20 : -20, opacity: 0, filter: 'blur(4px)' }),
-                center: { y: 0, opacity: 1, filter: 'blur(0px)' },
+                center: { y: 0, opacity: 1, filter: 'blur(0px)', transitionEnd: { filter: 'none' } },
                 exit: (d) => ({ y: d >= 0 ? -20 : 20, opacity: 0, filter: 'blur(4px)' }),
               }}
               initial="enter"

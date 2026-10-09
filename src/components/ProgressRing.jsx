@@ -1,10 +1,10 @@
-import { useId } from 'react';
+import { memo, useId } from 'react';
 import { motion } from 'framer-motion';
 import { easeOutExpo } from '../lib/motion';
 
 // Anillo estilo Actividad del Apple Watch. pathLength se interpola con
 // easeOutExpo (es un VALOR, no posición de UI).
-export function ProgressRing({ value, theme, size = 44, stroke = 5, delay = 0, children }) {
+export const ProgressRing = memo(function ProgressRing({ value, theme, size = 44, stroke = 5, delay = 0, children }) {
   const id = useId();
   const r = 50 - stroke;
   return (
@@ -33,4 +33,4 @@ export function ProgressRing({ value, theme, size = 44, stroke = 5, delay = 0, c
       {children && <div className="absolute inset-0 flex items-center justify-center">{children}</div>}
     </div>
   );
-}
+});

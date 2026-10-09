@@ -25,7 +25,6 @@ const Digit = forwardRef(function Digit({ ch }, ref) {
   return (
     <motion.span
       ref={ref}
-      layout="position"
       initial={{ opacity: 0, width: 0 }}
       animate={{ opacity: 1, width: 'auto' }}
       exit={{ opacity: 0, width: 0 }}
@@ -37,7 +36,7 @@ const Digit = forwardRef(function Digit({ ch }, ref) {
         <motion.span
           key={ch}
           initial={{ y: '-55%', opacity: 0, filter: 'blur(6px)', scale: 0.9 }}
-          animate={{ y: '0%', opacity: 1, filter: 'blur(0px)', scale: 1 }}
+          animate={{ y: '0%', opacity: 1, filter: 'blur(0px)', transitionEnd: { filter: 'none' }, scale: 1 }}
           exit={{ y: '55%', opacity: 0, filter: 'blur(6px)', scale: 0.9 }}
           transition={spring}
           className="inline-block"

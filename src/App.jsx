@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, pointerWithin, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
-import { ArrowDownUp, LayoutGrid } from 'lucide-react';
+import { ArrowDownUp, Check, LayoutGrid } from 'lucide-react';
 import { Header } from './components/Header';
 import { Hero, HeroEmpty } from './components/Hero';
 import { CardOverlay, CountdownCard } from './components/CountdownCard';
@@ -11,11 +11,12 @@ import { DetailView } from './components/DetailView';
 import { Composer } from './components/Composer';
 import { SegmentedControl } from './components/SegmentedControl';
 import { EmptyState } from './components/EmptyState';
+import { UpNext } from './components/UpNext';
 import { AmbientBackground } from './components/AmbientBackground';
 import { Toast } from './components/Toast';
 import { Button } from './components/Button';
 import { useCountdowns } from './lib/store';
-import { useNow } from './lib/useNow';
+import { getNow, useNowSelector } from './lib/useNow';
 import { THEMES, getTheme } from './lib/themes';
 import { originOffset } from './lib/origin';
 import { dragState } from './lib/dragState';
@@ -26,8 +27,11 @@ import { screenEnter, springSoft } from './lib/motion';
 const noStrategy = () => null;
 
 export default function App() {
-  const now = useNow();
   const { items, add, update, remove, restore, move, sortByDate, featuredId, setFeaturedId } = useCountdowns();
+  // App NO escucha cada segundo: solo se entera cuando algún countdown cruza
+  // el cero (cambia esta firma). Los segundos corren dentro de cada tarjeta.
+  useNowSelector(useCallback((t) => items.map((c) => (c.target <= t ? 1 : 0)).join(''), [items]));
+  const now = getNow();
   const [filter, setFilter] = useState('upcoming');
   const [selected, setSelected] = useState(null); // { id, origin: 'card' | 'hero' }
   const [composer, setComposer] = useState(null); // { initial?, origin }
@@ -42,6 +46,10 @@ export default function App() {
   const next = upcoming.reduce((a, c) => (!a || c.target < a.target ? c : a), null);
   const featured = items.find((c) => c.id === featuredId);
   const heroItem = featured ?? next;
+  const later = upcoming
+    .filter((c) => c.id !== heroItem?.id)
+    .sort((a, b) => a.target - b.target)
+    .slice(0, 4);
   const selectedItem = selected && items.find((c) => c.id === selected.id);
   const activeItem = activeId && items.find((c) => c.id === activeId);
 
@@ -116,8 +124,9 @@ export default function App() {
       <AmbientBackground theme={heroItem ? getTheme(heroItem.theme) : THEMES.blue} />
       <Header onCreate={openCreate} composerOpen={Boolean(composer)} />
 
-      <main className="mx-auto max-w-6xl px-4 pb-32 pt-6 sm:px-8 sm:pt-8">
-        <section aria-label="Destacado">
+      <main className="mx-auto max-w-[2100px] px-4 pb-32 pt-6 sm:px-8 sm:pt-8 xl:px-12">
+        {/* En pantallas anchas el Hero comparte fila con la columna "Después" */}
+        <section aria-label="Destacado" className={later.length ? 'grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(340px,400px)]' : ''}>
           <AnimatePresence mode="popLayout" initial={true}>
             {heroItem ? (
               <Hero
@@ -130,6 +139,11 @@ export default function App() {
               <HeroEmpty key="empty" onCreate={openCreate} />
             )}
           </AnimatePresence>
+          {later.length > 0 && (
+            <div className="hidden xl:flex">
+              <UpNext items={later} onOpen={(id) => setSelected({ id, origin: 'upnext' })} />
+            </div>
+          )}
         </section>
 
         <motion.section aria-label="Todos los countdowns" variants={screenEnter} custom={2} initial="hidden" animate="visible" className="mt-12">
@@ -152,31 +166,6 @@ export default function App() {
             </div>
           </div>
 
-          <AnimatePresence initial={false}>
-            {editing && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={springSoft}
-                className="overflow-hidden"
-              >
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-card bg-accent-soft px-4 py-3">
-                  <p className="font-ui text-13 font-medium text-accent">
-                    Arrastra para mover · elige el tamaño · ★ para destacar arriba
-                  </p>
-                  <button
-                    type="button"
-                    onClick={sortByDate}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-1 px-3.5 font-ui text-13 font-semibold text-text-1 shadow-1 transition-shadow hover:shadow-2"
-                  >
-                    <ArrowDownUp size={14} /> Ordenar por fecha
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           <DndContext
             sensors={sensors}
             collisionDetection={pointerWithin}
@@ -186,7 +175,7 @@ export default function App() {
             onDragCancel={endDrag}
           >
             <SortableContext items={visible.map((c) => c.id)} strategy={noStrategy}>
-              <div className="mt-6 grid grid-cols-1 gap-4 [grid-auto-flow:dense] sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-6 grid grid-cols-1 gap-4 [grid-auto-flow:dense] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-[1900px]:grid-cols-5 min-[2300px]:grid-cols-6">
                 <AnimatePresence mode="popLayout">
                   {visible.length === 0 ? (
                     <EmptyState key={`empty-${filter}`} filter={filter} onCreate={openCreate} />
@@ -237,6 +226,38 @@ export default function App() {
       <AnimatePresence>
         {composer && (
           <Composer key="composer" initial={composer.initial} origin={composer.origin} onClose={closeComposer} onSave={handleSave} />
+        )}
+      </AnimatePresence>
+
+      {/* Barra flotante del modo Organizar: solo transform/opacity, no empuja el layout */}
+      <AnimatePresence>
+        {editing && (
+          <motion.div
+            initial={{ y: 80, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 80, opacity: 0, scale: 0.95 }}
+            transition={springSoft}
+            className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(16px,env(safe-area-inset-bottom))]"
+          >
+            <div className="flex items-center gap-2 rounded-full bg-[#1d1d1f] p-1.5 pl-5 text-white shadow-3">
+              <span className="hidden font-ui text-13 font-medium text-white/80 sm:inline">Arrastra · elige tamaño · ★ destaca</span>
+              <span className="font-ui text-13 font-medium text-white/80 sm:hidden">Arrastra para mover</span>
+              <button
+                type="button"
+                onClick={sortByDate}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-white/15 px-3.5 font-ui text-13 font-semibold transition-colors hover:bg-white/25"
+              >
+                <ArrowDownUp size={14} /> Por fecha
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-accent px-4 font-ui text-13 font-semibold transition-colors hover:brightness-110"
+              >
+                <Check size={14} strokeWidth={3} /> Listo
+              </button>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

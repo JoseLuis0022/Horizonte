@@ -2,12 +2,13 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { springSnappy } from '../lib/motion';
 import { formatToday } from '../lib/time';
-import { useNow } from '../lib/useNow';
+import { useNowSelector } from '../lib/useNow';
 
 // Large Title de iOS: el título grande se encoge y desvanece al hacer scroll
 // mientras aparece la barra de vidrio con el título compacto.
 export function Header({ onCreate, composerOpen }) {
-  const now = useNow();
+  // Solo re-renderiza cuando cambia el día, no cada segundo.
+  const today = useNowSelector(formatToday);
   const { scrollY } = useScroll();
   const titleScale = useTransform(scrollY, [0, 90], [1, 0.92]);
   const titleOpacity = useTransform(scrollY, [10, 70], [1, 0]);
@@ -21,7 +22,7 @@ export function Header({ onCreate, composerOpen }) {
           style={{ opacity: barOpacity }}
           className="absolute inset-0 border-b border-hairline bg-[var(--glass)] backdrop-blur-2xl backdrop-saturate-150"
         />
-        <div className="relative mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-8">
+        <div className="relative mx-auto flex h-14 max-w-[2100px] items-center justify-between px-4 sm:px-8 xl:px-12">
           <span className="w-11" />
           <motion.span style={{ opacity: barOpacity }} className="font-ui text-17 font-semibold">
             Countdowns
@@ -45,7 +46,7 @@ export function Header({ onCreate, composerOpen }) {
 
       <motion.header
         style={{ scale: titleScale, opacity: titleOpacity, y: titleY }}
-        className="mx-auto max-w-6xl origin-left px-4 pt-[calc(56px+env(safe-area-inset-top))] sm:px-8"
+        className="mx-auto max-w-[2100px] origin-left px-4 pt-[calc(56px+env(safe-area-inset-top))] sm:px-8 xl:px-12"
       >
         <motion.p
           initial={{ opacity: 0, y: 6 }}
@@ -53,7 +54,7 @@ export function Header({ onCreate, composerOpen }) {
           transition={{ duration: 0.5, delay: 0.05 }}
           className="font-ui text-13 font-semibold uppercase tracking-wide text-text-2"
         >
-          {formatToday(now)}
+          {today}
         </motion.p>
         <h1 className="font-ui text-[40px] font-bold leading-[44px] tracking-tight sm:text-[52px] sm:leading-[56px]">
           <AnimatedWord text="Countdowns" />
@@ -72,7 +73,7 @@ function AnimatedWord({ text }) {
           key={i}
           aria-hidden
           initial={{ opacity: 0, y: 18, filter: 'blur(10px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }}
           transition={{ type: 'spring', stiffness: 260, damping: 26, delay: 0.1 + i * 0.035 }}
           className="inline-block"
         >

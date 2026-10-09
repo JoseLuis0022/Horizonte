@@ -16,7 +16,7 @@ export function Toast({ toast, onDismiss }) {
           <motion.div
             key={toast.key}
             initial={{ y: 40, opacity: 0, scale: 0.9, filter: 'blur(6px)' }}
-            animate={{ y: 0, opacity: 1, scale: 1, filter: 'blur(0px)' }}
+            animate={{ y: 0, opacity: 1, scale: 1, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }}
             exit={{ y: 20, opacity: 0, scale: 0.95, filter: 'blur(6px)' }}
             transition={springSoft}
             className="pointer-events-auto flex items-center gap-4 rounded-full bg-[#1d1d1f]/90 py-2 pl-5 pr-2 text-white shadow-3 backdrop-blur-xl dark:bg-[#3a3a3c]/90"

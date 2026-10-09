@@ -18,7 +18,9 @@ export const pad = (n) => String(n).padStart(2, '0');
 export function progress(createdAt, target, now) {
   const span = target - createdAt;
   if (span <= 0) return 1;
-  return Math.min(1, Math.max(0, (now - createdAt) / span));
+  // Redondeado a 0.1 %: un cambio de millonésimas por segundo reiniciaría
+  // cada segundo las animaciones de anillos y barras.
+  return Math.round(Math.min(1, Math.max(0, (now - createdAt) / span)) * 1000) / 1000;
 }
 
 const dateFmt = new Intl.DateTimeFormat('es-MX', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });

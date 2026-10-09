@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Pencil, Star, Trash2, X } from 'lucide-react';
 import { Overlay } from './Overlay';
@@ -9,7 +10,7 @@ import { Celebration } from './Celebration';
 import { Button, IconButton } from './Button';
 import { breakdown, formatLongDate, formatTime, progress, relative } from '../lib/time';
 import { getTheme } from '../lib/themes';
-import { useNow } from '../lib/useNow';
+import { useNow, useNowSelector } from '../lib/useNow';
 import { springBouncy, springLayout, springSoft } from '../lib/motion';
 
 const contentIn = {
@@ -18,11 +19,10 @@ const contentIn = {
   exit: { opacity: 0, transition: { duration: 0.1 } },
 };
 
+// El panel (nodo con layoutId) no escucha el reloj; DetailBody sí.
 export function DetailView({ item, origin, featured, onClose, onEdit, onDelete, onStyle, onFeature }) {
-  const now = useNow();
   const theme = getTheme(item.theme);
-  const t = breakdown(item.target, now);
-  const p = progress(item.createdAt, item.target, now);
+  const done = useNowSelector(useCallback((now) => item.target <= now, [item.target]));
 
   return (
     <Overlay onClose={onClose}>
@@ -41,6 +41,30 @@ export function DetailView({ item, origin, featured, onClose, onEdit, onDelete, 
           style={{ background: `radial-gradient(80% 100% at 50% 0%, ${theme.from}, transparent)` }}
         />
 
+        <DetailBody
+          item={item}
+          theme={theme}
+          origin={origin}
+          featured={featured}
+          onClose={onClose}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onStyle={onStyle}
+          onFeature={onFeature}
+        />
+
+        {done && <Celebration theme={theme} count={48} />}
+      </motion.div>
+    </Overlay>
+  );
+}
+
+function DetailBody({ item, theme, origin, featured, onClose, onEdit, onDelete, onStyle, onFeature }) {
+  const now = useNow();
+  const t = breakdown(item.target, now);
+  const p = progress(item.createdAt, item.target, now);
+
+  return (
         <div className="relative p-6 sm:p-10">
           <div className="flex items-start justify-between">
             <EmojiTile emoji={item.emoji} theme={theme} size={72} layoutId={`${origin}-emoji-${item.id}`} />
@@ -115,9 +139,5 @@ export function DetailView({ item, origin, featured, onClose, onEdit, onDelete, 
             </Button>
           </motion.div>
         </div>
-
-        {t.done && <Celebration theme={theme} count={48} />}
-      </motion.div>
-    </Overlay>
   );
 }

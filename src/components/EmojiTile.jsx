@@ -1,9 +1,12 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { gradient } from '../lib/themes';
 import { springLayout } from '../lib/motion';
 
 // Icono tipo app de iOS: degradado del tema + brillo superior.
-export function EmojiTile({ emoji, theme, size = 44, layoutId }) {
+// memo: tiene layoutId, y un nodo con layout que re-renderiza obliga a Framer
+// a medir todos los nodos de layout de la página.
+export const EmojiTile = memo(function EmojiTile({ emoji, theme, size = 44, layoutId }) {
   const radius = Math.round(size * 0.28);
   return (
     <motion.div
@@ -22,4 +25,4 @@ export function EmojiTile({ emoji, theme, size = 44, layoutId }) {
       </span>
     </motion.div>
   );
-}
+});

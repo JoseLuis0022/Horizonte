@@ -29,7 +29,6 @@ function Orb({ color, className, anim }) {
       className={`absolute rounded-full ${className}`}
       style={{
         background: `radial-gradient(circle at center, ${color} 0%, transparent 68%)`,
-        filter: 'blur(40px)',
         opacity: 0.55,
         animation: anim,
         willChange: 'transform',

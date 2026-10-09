@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { memo, useId } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { NumericText } from './NumericText';
 import { TimeUnits } from './TimeUnits';
@@ -15,9 +15,12 @@ export function Visualizer({ style = 'digits', ...props }) {
       <motion.div
         key={style}
         initial={{ opacity: 0, y: 8, filter: 'blur(6px)' }}
-        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }}
         exit={{ opacity: 0, y: -8, filter: 'blur(6px)' }}
         transition={{ duration: 0.25 }}
+        // Contenedor de consulta: los tamaños `cqi` escalan con el ancho real
+        // disponible (Hero, tarjeta grande, detalle), no con el de la ventana.
+        className="[container-type:inline-size]"
       >
         <Comp {...props} />
       </motion.div>
@@ -50,7 +53,7 @@ function BigDays({ t, className = 'text-[44px]' }) {
 
 /* ───────────── Números ───────────── */
 function DigitsViz({ t, theme, size }) {
-  if (size === 'lg') return <TimeUnits t={t} theme={theme} sizeClass="text-[clamp(40px,11vw,112px)]" />;
+  if (size === 'lg') return <TimeUnits t={t} theme={theme} sizeClass="text-[clamp(40px,17cqi,176px)]" />;
   return (
     <div className="flex items-end justify-between gap-2">
       <BigDays t={t} />
@@ -85,7 +88,7 @@ function RingsViz({ t, p, theme, size }) {
   const lg = size === 'lg';
   const dayFrac = 1 - (t.hours * 60 + t.minutes) / 1440;
   const secFrac = 1 - t.seconds / 60;
-  const px = lg ? 'clamp(180px, 44vw, 260px)' : '96px';
+  const px = lg ? 'clamp(160px, 38cqi, 320px)' : '96px';
   const legend = [
     [theme.from, 'Total', `${Math.round(p * 100)}%`],
     [theme.to, 'Día', `${pad(t.hours)}:${pad(t.minutes)}`],
@@ -108,7 +111,7 @@ function RingsViz({ t, p, theme, size }) {
       </div>
       {lg ? (
         <div className="flex w-full flex-col gap-6">
-          <BigDays t={t} className="text-[clamp(56px,12vw,104px)]" />
+          <BigDays t={t} className="text-[clamp(56px,14cqi,140px)]" />
           <div className="grid grid-cols-3 gap-3">
             {legend.map(([c, l, v]) => (
               <div key={l} className="rounded-control bg-text-1/[0.04] p-3">
@@ -137,7 +140,7 @@ function BarViz({ t, p, theme, size }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-end justify-between gap-2">
-        <BigDays t={t} className={lg ? 'text-[clamp(56px,12vw,104px)]' : 'text-[40px]'} />
+        <BigDays t={t} className={lg ? 'text-[clamp(56px,14cqi,140px)]' : 'text-[40px]'} />
         <Clock t={t} className={lg ? 'text-22' : 'text-15'} />
       </div>
       <div className={cn('relative overflow-hidden rounded-full bg-text-1/[0.06]', lg ? 'h-14' : 'h-3')}>
@@ -186,6 +189,19 @@ function DotsViz({ t, p, theme, size, item }) {
 
   return (
     <div className="flex flex-col gap-3">
+      <DotGrid n={n} filled={filled} from={theme.from} to={theme.to} lg={lg} />
+      <div className="flex items-end justify-between gap-2">
+        <BigDays t={t} className={lg ? 'text-[clamp(48px,12cqi,120px)]' : 'text-[32px]'} />
+        <span className="font-ui text-12 font-semibold text-text-3">{perDay ? '1 punto = 1 día' : '1 punto = 1 %'}</span>
+      </div>
+    </div>
+  );
+}
+
+// memo: la cuadrícula solo cambia cuando se llena otro punto, no cada segundo.
+const DotGrid = memo(function DotGrid({ n, filled, from, to, lg }) {
+  const theme = { from, to };
+  return (
       <div className={cn('grid', lg ? 'gap-1.5 sm:gap-2' : 'gap-1')} style={{ gridTemplateColumns: `repeat(${lg ? 'auto-fill, minmax(14px, 1fr)' : '14, minmax(0, 1fr)'})` }}>
         {Array.from({ length: n }, (_, i) => {
           const on = i < filled;
@@ -200,24 +216,14 @@ function DotsViz({ t, p, theme, size, item }) {
               style={{ background: on ? lerpColor(theme.from, theme.to, i / n) : 'rgba(0,0,0,0.07)' }}
             >
               {current && (
-                <motion.span
-                  className="absolute inset-0 rounded-full"
-                  style={{ background: theme.from }}
-                  animate={{ scale: [0.6, 1.1, 0.6], opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-                />
+                <span className="absolute inset-0 rounded-full" style={{ background: theme.from, animation: 'pulse-dot 1.4s ease-in-out infinite' }} />
               )}
             </motion.span>
           );
         })}
       </div>
-      <div className="flex items-end justify-between gap-2">
-        <BigDays t={t} className={lg ? 'text-[clamp(48px,10vw,88px)]' : 'text-[32px]'} />
-        <span className="font-ui text-12 font-semibold text-text-3">{perDay ? '1 punto = 1 día' : '1 punto = 1 %'}</span>
-      </div>
-    </div>
   );
-}
+});
 
 /* ───────────── Columnas (ecualizador) ───────────── */
 function ColumnsViz({ t, theme, size, item }) {
@@ -233,8 +239,8 @@ function ColumnsViz({ t, theme, size, item }) {
     <div className={cn('grid grid-cols-4', lg ? 'gap-3 sm:gap-5' : 'gap-2')}>
       {cols.map(([label, v, frac], i) => (
         <div key={label} className="flex min-w-0 flex-col items-center gap-2">
-          <NumericText value={v} className={cn('font-ui font-semibold leading-none tracking-tight', lg ? 'text-[clamp(28px,6vw,52px)]' : 'text-17')} />
-          <div className={cn('relative w-full overflow-hidden bg-text-1/[0.05]', lg ? 'h-[clamp(140px,28vw,220px)] rounded-[20px]' : 'h-16 rounded-[10px]')}>
+          <NumericText value={v} className={cn('font-ui font-semibold leading-none tracking-tight', lg ? 'text-[clamp(28px,7cqi,64px)]' : 'text-17')} />
+          <div className={cn('relative w-full overflow-hidden bg-text-1/[0.05]', lg ? 'h-[clamp(140px,30cqi,260px)] rounded-[20px]' : 'h-16 rounded-[10px]')}>
             <motion.div
               className="absolute inset-x-0 bottom-0"
               style={{ background: `linear-gradient(0deg, ${theme.from}, ${theme.to})`, borderRadius: lg ? 20 : 10 }}
@@ -255,13 +261,39 @@ function ColumnsViz({ t, theme, size, item }) {
 /* ───────────── Arco (medidor) ───────────── */
 function ArcViz({ t, p, theme, size }) {
   const lg = size === 'lg';
+  const gauge = <ArcGauge p={p} from={theme.from} to={theme.to} lg={lg} />;
+  if (lg) {
+    return (
+      <div className="flex flex-col items-center">
+        {gauge}
+        <div className="-mt-[clamp(40px,22cqi,130px)] flex flex-col items-center">
+          <BigDays t={t} className="text-[clamp(48px,12cqi,112px)]" />
+          <Clock t={t} className="mt-1 text-22" />
+          <span className="mt-2 font-ui text-13 font-semibold tabular-nums text-text-3">{Math.round(p * 100)}% del camino</span>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-4">
+      {gauge}
+      <div className="flex min-w-0 flex-col gap-1">
+        <BigDays t={t} className="text-[40px]" />
+        <Clock t={t} className="text-15" />
+      </div>
+    </div>
+  );
+}
+
+const ArcGauge = memo(function ArcGauge({ p, from, to, lg }) {
+  const theme = { from, to };
   const n = lg ? 48 : 32;
   const lit = Math.round(p * (n - 1));
   const polar = (deg, r) => [100 + r * Math.cos((deg * Math.PI) / 180), 100 + r * Math.sin((deg * Math.PI) / 180)];
   const knobDeg = 180 + p * 180;
   const [kx, ky] = polar(knobDeg, 70);
-  const gauge = (
-    <svg viewBox="0 0 200 108" className={cn('overflow-visible', lg ? 'w-full max-w-[440px]' : 'w-36 shrink-0')}>
+  return (
+    <svg viewBox="0 0 200 108" className={cn('overflow-visible', lg ? 'w-full max-w-[520px]' : 'w-36 shrink-0')}>
       {Array.from({ length: n }, (_, i) => {
         const deg = 180 + (i / (n - 1)) * 180;
         const [x1, y1] = polar(deg, 80);
@@ -297,28 +329,7 @@ function ArcViz({ t, p, theme, size }) {
       />
     </svg>
   );
-  if (lg) {
-    return (
-      <div className="flex flex-col items-center">
-        {gauge}
-        <div className="-mt-[clamp(40px,10vw,96px)] flex flex-col items-center">
-          <BigDays t={t} className="text-[clamp(48px,11vw,96px)]" />
-          <Clock t={t} className="mt-1 text-22" />
-          <span className="mt-2 font-ui text-13 font-semibold tabular-nums text-text-3">{Math.round(p * 100)}% del camino</span>
-        </div>
-      </div>
-    );
-  }
-  return (
-    <div className="flex items-center gap-4">
-      {gauge}
-      <div className="flex min-w-0 flex-col gap-1">
-        <BigDays t={t} className="text-[40px]" />
-        <Clock t={t} className="text-15" />
-      </div>
-    </div>
-  );
-}
+});
 
 /* ───────────── Semanas (calendario) ───────────── */
 function WeeksViz({ t, theme, size, item }) {
@@ -334,6 +345,18 @@ function WeeksViz({ t, theme, size, item }) {
 
   return (
     <div className="flex flex-col gap-3">
+      <WeekGrid weeks={weeks} windowStart={windowStart} endDay={endDay} today={today} from={theme.from} to={theme.to} lg={lg} />
+      <div className="flex items-end justify-between gap-2">
+        <BigDays t={t} className={lg ? 'text-[clamp(48px,12cqi,120px)]' : 'text-[32px]'} />
+        <span className="font-ui text-12 font-semibold text-text-3">{lg ? 'Cada cuadro es un día · la meta va enmarcada' : '1 cuadro = 1 día'}</span>
+      </div>
+    </div>
+  );
+}
+
+const WeekGrid = memo(function WeekGrid({ weeks, windowStart, endDay, today, from, to, lg }) {
+  const theme = { from, to };
+  return (
       <div
         className="grid grid-flow-col"
         style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))', gridTemplateColumns: `repeat(${weeks}, minmax(0, 1fr))`, gap: lg ? 5 : 3 }}
@@ -358,23 +381,13 @@ function WeeksViz({ t, theme, size, item }) {
               transition={{ ...springSoft, delay: 0.1 + Math.floor(i / 7) * 0.03 + (i % 7) * 0.01 }}
             >
               {isToday && (
-                <motion.span
-                  className="absolute inset-0"
-                  style={{ borderRadius: 'inherit', background: theme.from }}
-                  animate={{ opacity: [0.35, 1, 0.35] }}
-                  transition={{ duration: 1.4, repeat: Infinity }}
-                />
+                <span className="absolute inset-0" style={{ borderRadius: 'inherit', background: theme.from, animation: 'pulse-cell 1.4s ease-in-out infinite' }} />
               )}
             </motion.span>
           );
         })}
       </div>
-      <div className="flex items-end justify-between gap-2">
-        <BigDays t={t} className={lg ? 'text-[clamp(48px,10vw,88px)]' : 'text-[32px]'} />
-        <span className="font-ui text-12 font-semibold text-text-3">{lg ? 'Cada cuadro es un día · la meta va enmarcada' : '1 cuadro = 1 día'}</span>
-      </div>
-    </div>
   );
-}
+});
 
 const VIZ = { digits: DigitsViz, rings: RingsViz, bar: BarViz, dots: DotsViz, columns: ColumnsViz, arc: ArcViz, weeks: WeeksViz };

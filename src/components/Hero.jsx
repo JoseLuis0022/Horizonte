@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, memo } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Plus } from 'lucide-react';
 import { EmojiTile } from './EmojiTile';
@@ -10,11 +10,10 @@ import { getTheme, gradient } from '../lib/themes';
 import { useNow } from '../lib/useNow';
 import { easeOutExpo, springLayout, springSoft } from '../lib/motion';
 
-export const Hero = forwardRef(function Hero({ item, featured, onOpen }, ref) {
-  const now = useNow();
+// La raíz (con layoutId) no escucha el reloj: solo HeroBody re-renderiza
+// cada segundo, así Framer no re-mide el layout de la página en cada tick.
+export const Hero = memo(forwardRef(function Hero({ item, featured, onOpen }, ref) {
   const theme = getTheme(item.theme);
-  const t = breakdown(item.target, now);
-  const p = progress(item.createdAt, item.target, now);
 
   return (
     <motion.div
@@ -22,20 +21,28 @@ export const Hero = forwardRef(function Hero({ item, featured, onOpen }, ref) {
       layoutId={`hero-${item.id}`}
       transition={springLayout}
       initial={{ opacity: 0, y: 16, filter: 'blur(10px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }}
       exit={{ opacity: 0, y: -8, filter: 'blur(10px)' }}
       style={{ borderRadius: 32 }}
       className="relative overflow-hidden border border-hairline bg-surface-1 shadow-2"
     >
       {/* Halo cónico girando lentamente: el "motion graphic" de fondo */}
-      <motion.div
+      <div
         aria-hidden
-        className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full opacity-25 blur-3xl dark:opacity-30"
-        style={{ background: `conic-gradient(from 0deg, ${theme.from}, ${theme.to}, ${theme.from})` }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+        className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full opacity-25 blur-3xl will-change-transform"
+        style={{ background: `conic-gradient(from 0deg, ${theme.from}, ${theme.to}, ${theme.from})`, animation: 'spin 18s linear infinite' }}
       />
+      <HeroBody item={item} theme={theme} featured={featured} onOpen={onOpen} />
+    </motion.div>
+  );
+}));
 
+function HeroBody({ item, theme, featured, onOpen }) {
+  const now = useNow();
+  const t = breakdown(item.target, now);
+  const p = progress(item.createdAt, item.target, now);
+
+  return (
       <motion.button
         onClick={onOpen}
         whileTap={{ scale: 0.99 }}
@@ -45,12 +52,7 @@ export const Hero = forwardRef(function Hero({ item, featured, onOpen }, ref) {
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center gap-2 rounded-full bg-text-1/[0.05] px-3 py-1.5 font-ui text-12 font-semibold uppercase tracking-wide text-text-2">
             <span className="relative flex h-2 w-2">
-              <motion.span
-                className="absolute inset-0 rounded-full"
-                style={{ background: theme.from }}
-                animate={{ scale: [1, 2.4], opacity: [0.6, 0] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
-              />
+              <span className="absolute inset-0 animate-ping rounded-full opacity-60" style={{ background: theme.from }} />
               <span className="relative h-2 w-2 rounded-full" style={{ background: theme.from }} />
             </span>
             {featured ? 'Destacado' : 'Lo siguiente'}
@@ -87,16 +89,15 @@ export const Hero = forwardRef(function Hero({ item, featured, onOpen }, ref) {
         </div>
         )}
       </motion.button>
-    </motion.div>
   );
-});
+}
 
 export const HeroEmpty = forwardRef(function HeroEmpty({ onCreate }, ref) {
   return (
     <motion.div
       ref={ref}
       initial={{ opacity: 0, y: 16, filter: 'blur(10px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }}
       exit={{ opacity: 0, filter: 'blur(10px)' }}
       transition={springSoft}
       className="flex flex-col items-center rounded-modal border border-dashed border-text-3/40 bg-surface-1/60 px-6 py-16 text-center backdrop-blur-xl"

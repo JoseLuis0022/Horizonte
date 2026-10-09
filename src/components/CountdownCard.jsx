@@ -9,7 +9,7 @@ import { Celebration } from './Celebration';
 import { SELF_PROGRESS } from '../lib/styles';
 import { breakdown, formatDate, progress, relative } from '../lib/time';
 import { getTheme } from '../lib/themes';
-import { useNow } from '../lib/useNow';
+import { useNow, useNowSelector } from '../lib/useNow';
 import { justDragged } from '../lib/dragState';
 import { cn } from '../lib/cn';
 import { spring, springLayout, springSnappy, springSoft } from '../lib/motion';
@@ -83,9 +83,10 @@ export function CardContent({ item, index = 0, editing = false, withLayoutIds = 
 }
 
 export const CountdownCard = forwardRef(function CountdownCard({ item, index, onOpen, editing, featured, onResize, onFeature }, ref) {
-  const now = useNow();
   const theme = getTheme(item.theme);
-  const done = item.target <= now;
+  // La raíz (nodo de layout de Framer) solo re-renderiza cuando el countdown
+  // termina; los dígitos que corren viven en CardContent.
+  const done = useNowSelector(useCallback((now) => item.target <= now, [item.target]));
   const size = item.size ?? 's';
 
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id: item.id });
@@ -130,9 +131,13 @@ export const CountdownCard = forwardRef(function CountdownCard({ item, index, on
     if (!tiltOn) reset();
   }, [tiltOn]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Temblor de "modo edición" tipo pantalla de inicio de iOS, con fase propia.
+  // Temblor de "modo edición" tipo iOS, en CSS (compositor) y con fase propia.
   const phase = useMemo(() => Math.random(), []);
-  const jiggle = size === 's' ? 0.9 : 0.35;
+  const jiggleStyle = {
+    '--jiggle': `${size === 's' ? 0.9 : 0.35}deg`,
+    '--jiggle-dur': `${0.26 + phase * 0.08}s`,
+    animationDelay: `${-phase}s`,
+  };
 
   return (
     <motion.div
@@ -145,15 +150,7 @@ export const CountdownCard = forwardRef(function CountdownCard({ item, index, on
       style={{ borderRadius: 24, perspective: 900 }}
       className={cn('relative', SIZE_CLASS[size])}
     >
-      <motion.div
-        className="h-full"
-        animate={editing && !isDragging ? { rotate: [-jiggle, jiggle] } : { rotate: 0 }}
-        transition={
-          editing && !isDragging
-            ? { duration: 0.26 + phase * 0.08, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut', delay: phase * 0.2 }
-            : springSoft
-        }
-      >
+      <div className={cn('h-full', editing && !isDragging && 'jiggle')} style={editing ? jiggleStyle : undefined}>
         <motion.button
           {...attributes}
           {...listeners}
@@ -189,7 +186,7 @@ export const CountdownCard = forwardRef(function CountdownCard({ item, index, on
             <CardContent item={item} index={index} editing={editing} />
           </motion.div>
         </motion.button>
-      </motion.div>
+      </div>
 
       <AnimatePresence>
         {editing && !isDragging && (
@@ -208,7 +205,7 @@ function CardControls({ id, size, onResize, featured, onFeature }) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.7, y: -6 }}
       transition={springSnappy}
-      className="absolute right-3 top-3 z-10 flex items-center gap-0.5 rounded-full border border-hairline bg-surface-1/90 p-1 shadow-2 backdrop-blur-xl"
+      className="absolute right-3 top-3 z-10 flex items-center gap-0.5 rounded-full border border-hairline bg-surface-1 p-1 shadow-2"
     >
       {SIZES.map((s) => {
         const active = s.key === size;

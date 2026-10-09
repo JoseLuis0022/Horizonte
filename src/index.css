@@ -96,6 +96,23 @@
   }
 }
 
+/* Pulsos y temblor en CSS: corren en el compositor, no en el hilo principal */
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(0.6); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+@keyframes pulse-cell {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+@keyframes jiggle {
+  from { transform: rotate(calc(var(--jiggle, 0.8deg) * -1)); }
+  to { transform: rotate(var(--jiggle, 0.8deg)); }
+}
+.jiggle {
+  animation: jiggle var(--jiggle-dur, 0.28s) ease-in-out infinite alternate;
+  will-change: transform;
+}
 @keyframes shimmer {
   from { transform: translateX(-100%); }
   to { transform: translateX(250%); }
