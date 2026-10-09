@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light; /* Solo tema claro: colorimetría blanca estilo Apple */
+
+  /* Superficies */
+  --bg: #f5f5f7;
+  --surface-1: #ffffff;
+  --surface-2: #fbfbfd;
+  --hairline: rgba(0, 0, 0, 0.08);
+
+  /* Texto */
+  --text-1: #1d1d1f;
+  --text-2: #6e6e73;
+  --text-3: #a1a1a6;
+
+  --accent: #0a6cff;
+  --accent-soft: rgba(10, 108, 255, 0.1);
+  --danger: #d32f2f;
+  --danger-soft: rgba(211, 47, 47, 0.1);
+
+  /* Sombras en capas, nunca una sola dura */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-2: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-3: 0 8px 16px rgba(0, 0, 0, 0.06), 0 24px 64px rgba(0, 0, 0, 0.14);
+
+  --glass: rgba(255, 255, 255, 0.72);
+  --orb-opacity: 0.45;
+}
+
+/* Todo estilo global dentro de @layer base para no ganarle a las utilidades */
+@layer base {
+  * {
+    border-color: var(--hairline);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-1);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+    cursor: pointer;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
+
+/* Orbes ambientales: solo transform, compuesto en GPU */
+@keyframes drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(8vw, 6vh, 0) scale(1.15); }
+  66% { transform: translate3d(-6vw, 10vh, 0) scale(0.92); }
+}
+@keyframes drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-10vw, -8vh, 0) scale(1.2); }
+}
+@keyframes drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+  40% { transform: translate3d(6vw, -10vh, 0) scale(0.9); }
+  80% { transform: translate3d(-4vw, 4vh, 0) scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
