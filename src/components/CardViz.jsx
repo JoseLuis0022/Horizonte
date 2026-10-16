@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { NumericText } from './NumericText';
 import { DAY, pad } from '../lib/time';
 import { cn } from '../lib/cn';
-import { easeOutExpo, springSoft } from '../lib/motion';
+import { easeOutExpo } from '../lib/motion';
 import { fitGrid, shapeOf, useBox } from '../lib/grid';
 import { Arc, ArcTicks, SecondHand, lerpColor, localDay } from './Visualizer';
 
@@ -16,6 +16,9 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const shortFmt = new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short' });
 const fmtShort = (ts) => shortFmt.format(ts).replace('.', '');
 const numFmt = new Intl.NumberFormat('es-MX');
+// Entrada de puntos y cuadros en CSS (compositor), no un spring de JS por
+// cada uno: con 200 elementos por tarjeta, en móvil la diferencia se nota.
+const POP = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 
 export function CardViz({ style = 'digits', ...props }) {
   const [ref, box] = useBox();
@@ -220,16 +223,13 @@ const DotField = memo(function DotField({ n, filled, from, to }) {
           {Array.from({ length: n }, (_, i) => {
             const on = i < filled;
             return (
-              <motion.span
+              <span
                 key={i}
                 className="relative rounded-full"
-                style={{ width: cell, height: cell, background: on ? lerpColor(from, to, i / n) : 'rgba(0,0,0,0.07)' }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ ...springSoft, delay: 0.1 + i * 0.004 }}
+                style={{ width: cell, height: cell, background: on ? lerpColor(from, to, i / n) : 'rgba(0,0,0,0.07)', animation: `pop-in 0.5s ${POP} ${0.1 + i * 0.004}s both` }}
               >
                 {i === filled && <span className="absolute inset-0 rounded-full" style={{ background: from, animation: 'pulse-dot 1.4s ease-in-out infinite' }} />}
-              </motion.span>
+              </span>
             );
           })}
         </div>
@@ -333,7 +333,7 @@ const WeekField = memo(function WeekField({ windowStart, endDay, today, from, to
             const exists = day >= windowStart && day < endDay;
             const isToday = day === today;
             return (
-              <motion.span
+              <span
                 key={i}
                 className="relative"
                 style={{
@@ -342,13 +342,11 @@ const WeekField = memo(function WeekField({ windowStart, endDay, today, from, to
                   borderRadius: cell * 0.28,
                   background: !exists ? 'transparent' : day < today ? lerpColor(from, to, i / count) : 'rgba(0,0,0,0.07)',
                   boxShadow: exists && day === endDay - 1 ? `inset 0 0 0 2px ${to}` : undefined,
+                  animation: `pop-in 0.5s ${POP} ${0.1 + i * 0.005}s both`,
                 }}
-                initial={{ opacity: 0, scale: 0.4 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ ...springSoft, delay: 0.1 + i * 0.005 }}
               >
                 {exists && isToday && <span className="absolute inset-0" style={{ borderRadius: 'inherit', background: from, animation: 'pulse-cell 1.4s ease-in-out infinite' }} />}
-              </motion.span>
+              </span>
             );
           })}
         </div>
@@ -549,10 +547,10 @@ function ColumnsCard({ t, item, theme, box }) {
           <Big value={v} fs={fs} />
           <div className="relative w-full min-h-0 flex-1 overflow-hidden bg-text-1/[0.05]" style={{ borderRadius: r }}>
             <motion.div
-              className="absolute inset-x-0 bottom-0"
+              className="absolute inset-0"
               style={{ background: `linear-gradient(0deg, ${theme.from}, ${theme.to})`, borderRadius: r }}
-              initial={{ height: '0%' }}
-              animate={{ height: `${Math.max(4, Math.min(1, frac) * 100)}%` }}
+              initial={{ transform: 'translateY(100%)' }}
+              animate={{ transform: `translateY(${100 - Math.max(4, Math.min(1, frac) * 100)}%)` }}
               transition={{ type: 'spring', stiffness: 120, damping: 20, delay: i * 0.06 }}
             >
               <span className="absolute inset-x-2 top-1.5 h-1 rounded-full bg-white/50" />

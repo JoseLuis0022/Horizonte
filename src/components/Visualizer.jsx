@@ -245,10 +245,10 @@ function ColumnsViz({ t, theme, size, item }) {
           <NumericText value={v} className={cn('font-ui font-semibold leading-none tracking-tight', lg ? 'text-[clamp(28px,7cqi,64px)]' : 'text-17')} />
           <div className={cn('relative w-full overflow-hidden bg-text-1/[0.05]', lg ? 'h-[clamp(140px,30cqi,260px)] rounded-[20px]' : 'h-16 rounded-[10px]')}>
             <motion.div
-              className="absolute inset-x-0 bottom-0"
+              className="absolute inset-0"
               style={{ background: `linear-gradient(0deg, ${theme.from}, ${theme.to})`, borderRadius: lg ? 20 : 10 }}
-              initial={{ height: '0%' }}
-              animate={{ height: `${Math.max(4, Math.min(1, frac) * 100)}%` }}
+              initial={{ transform: 'translateY(100%)' }}
+              animate={{ transform: `translateY(${100 - Math.max(4, Math.min(1, frac) * 100)}%)` }}
               transition={{ type: 'spring', stiffness: 120, damping: 20, delay: i * 0.06 }}
             >
               <span className="absolute inset-x-2 top-1.5 h-1 rounded-full bg-white/50" />

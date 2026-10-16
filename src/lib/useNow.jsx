@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 // Un solo reloj para toda la app, alineado al cambio de segundo, como store
 // externo: cada componente se suscribe solo a lo que necesita.
@@ -30,8 +30,28 @@ function subscribe(listener) {
 
 export const getNow = () => now;
 
-export function useNow() {
-  return useSyncExternalStore(subscribe, getNow);
+const noSubscribe = () => () => {};
+
+// enabled = false congela el valor (p. ej. tarjetas fuera de pantalla): no se
+// re-renderiza hasta volver a estar visible.
+export function useNow(enabled = true) {
+  const frozen = useRef(now);
+  if (enabled) frozen.current = now;
+  const getFrozen = useCallback(() => frozen.current, []);
+  return useSyncExternalStore(enabled ? subscribe : noSubscribe, enabled ? getNow : getFrozen);
+}
+
+// true mientras el elemento está (casi) en pantalla.
+export function useInView(ref, margin = '200px') {
+  const [inView, setInView] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { rootMargin: margin });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref, margin]);
+  return inView;
 }
 
 // `selector` debe devolver un primitivo (string/number/boolean).

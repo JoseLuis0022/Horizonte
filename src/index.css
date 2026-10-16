@@ -100,6 +100,10 @@
 }
 
 /* Pulsos y temblor en CSS: corren en el compositor, no en el hilo principal */
+@keyframes pop-in {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 @keyframes pulse-dot {
   0%, 100% { transform: scale(0.6); opacity: 0.5; }
   50% { transform: scale(1.1); opacity: 1; }

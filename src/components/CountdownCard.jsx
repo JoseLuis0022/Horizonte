@@ -9,7 +9,7 @@ import { Celebration } from './Celebration';
 import { SELF_PROGRESS } from '../lib/styles';
 import { breakdown, formatDate, progress, relative } from '../lib/time';
 import { getTheme } from '../lib/themes';
-import { useNow, useNowSelector } from '../lib/useNow';
+import { useInView, useNow, useNowSelector } from '../lib/useNow';
 import { justDragged } from '../lib/dragState';
 import { cn } from '../lib/cn';
 import { MAX_H, dims } from '../lib/grid';
@@ -20,7 +20,10 @@ const finePointer = typeof window !== 'undefined' && window.matchMedia('(hover: 
 // Contenido visual de la tarjeta; lo comparten la tarjeta del grid y la copia
 // que flota bajo el cursor al arrastrar (sin layoutIds para no duplicarlos).
 export function CardContent({ item, index = 0, editing = false, withLayoutIds = true }) {
-  const now = useNow();
+  // Fuera de pantalla el reloj de la tarjeta se congela: con muchas tarjetas,
+  // en móvil solo se actualizan las que se ven.
+  const rootRef = useRef(null);
+  const now = useNow(useInView(rootRef));
   const theme = getTheme(item.theme);
   const t = breakdown(item.target, now);
   const p = progress(item.createdAt, item.target, now);
@@ -29,7 +32,7 @@ export function CardContent({ item, index = 0, editing = false, withLayoutIds = 
   const showRing = !editing && (t.done || !SELF_PROGRESS.has(item.style));
 
   return (
-    <div className="flex h-full flex-col">
+    <div ref={rootRef} className="flex h-full flex-col">
       {/* Encabezado en una fila: deja casi toda la tarjeta para los números */}
       <div className="relative flex items-center gap-3">
         <EmojiTile emoji={item.emoji} theme={theme} size={big ? 52 : 40} layoutId={withLayoutIds ? `card-emoji-${item.id}` : undefined} />

@@ -2,6 +2,24 @@ import { forwardRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '../lib/cn';
 import { spring } from '../lib/motion';
+import { LITE } from '../lib/perf';
+
+// Se anima `transform` como cadena (no `y`/`scale` por separado): así Framer
+// lo pasa a Web Animations y corre en el compositor, fuera del hilo principal.
+const IN = 'translateY(-55%) scale(0.9)';
+const REST = 'translateY(0%) scale(1)';
+const OUT = 'translateY(55%) scale(0.9)';
+const DIGIT_FULL = {
+  initial: { transform: IN, opacity: 0, filter: 'blur(6px)' },
+  animate: { transform: REST, opacity: 1, filter: 'blur(0px)', transitionEnd: { filter: 'none' } },
+  exit: { transform: OUT, opacity: 0, filter: 'blur(6px)' },
+};
+// En móvil: el mismo movimiento sin blur.
+const DIGIT_LITE = {
+  initial: { transform: IN, opacity: 0 },
+  animate: { transform: REST, opacity: 1 },
+  exit: { transform: OUT, opacity: 0 },
+};
 
 // Transición de dígitos tipo `.contentTransition(.numericText(countsDown:))`
 // de SwiftUI: cada dígito cambia por separado, el viejo cae y se desenfoca,
@@ -35,9 +53,7 @@ const Digit = forwardRef(function Digit({ ch }, ref) {
       <AnimatePresence initial={false} mode="popLayout">
         <motion.span
           key={ch}
-          initial={{ y: '-55%', opacity: 0, filter: 'blur(6px)', scale: 0.9 }}
-          animate={{ y: '0%', opacity: 1, filter: 'blur(0px)', transitionEnd: { filter: 'none' }, scale: 1 }}
-          exit={{ y: '55%', opacity: 0, filter: 'blur(6px)', scale: 0.9 }}
+          {...(LITE ? DIGIT_LITE : DIGIT_FULL)}
           transition={spring}
           className="inline-block"
         >
