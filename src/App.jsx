@@ -19,6 +19,7 @@ import { useCountdowns } from './lib/store';
 import { getNow, useNowSelector } from './lib/useNow';
 import { THEMES, getTheme } from './lib/themes';
 import { originOffset } from './lib/origin';
+import { useGridCols } from './lib/grid';
 import { dragState } from './lib/dragState';
 import { screenEnter, springSoft } from './lib/motion';
 
@@ -34,6 +35,7 @@ export default function App() {
   const now = getNow();
   const [filter, setFilter] = useState('upcoming');
   const [selected, setSelected] = useState(null); // { id, origin: 'card' | 'hero' | 'upnext', offset }
+  const cols = useGridCols();
   const [composer, setComposer] = useState(null); // { initial?, origin }
   const [toast, setToast] = useState(null);
   const [editing, setEditing] = useState(false);
@@ -186,7 +188,7 @@ export default function App() {
             onDragCancel={endDrag}
           >
             <SortableContext items={visible.map((c) => c.id)} strategy={noStrategy}>
-              <div className="mt-6 grid grid-cols-1 gap-4 [grid-auto-flow:dense] sm:[grid-auto-rows:minmax(272px,1fr)] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-[1900px]:grid-cols-5 min-[2300px]:grid-cols-6">
+              <div className="mt-6 grid grid-cols-1 gap-4 [grid-auto-flow:dense] [grid-auto-rows:200px] sm:[grid-auto-rows:clamp(230px,16vw,320px)] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-[1900px]:grid-cols-5 min-[2300px]:grid-cols-6">
                 <AnimatePresence mode="popLayout">
                   {visible.length === 0 ? (
                     <EmptyState key={`empty-${filter}`} filter={filter} onCreate={openCreate} />
@@ -199,7 +201,8 @@ export default function App() {
                         editing={editing}
                         featured={item.id === featuredId}
                         onOpen={() => openDetail(item.id, 'card')}
-                        onResize={(size) => update(item.id, { size })}
+                        cols={cols}
+                        onResize={(d) => update(item.id, d)}
                         onFeature={() => toggleFeatured(item.id)}
                       />
                     ))

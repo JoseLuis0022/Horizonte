@@ -1,3 +1,4 @@
+import { dims } from './grid';
 import { useCallback, useEffect, useState } from 'react';
 import { DAY } from './time';
 
@@ -14,9 +15,9 @@ function nextOccurrence(month, day) {
 function seed() {
   const now = Date.now();
   return [
-    { id: 's1', size: 'l', style: 'dots', title: 'Navidad', emoji: '🎄', theme: 'green', target: nextOccurrence(11, 25), createdAt: now - 40 * DAY },
+    { id: 's1', w: 2, h: 2, style: 'dots', title: 'Navidad', emoji: '🎄', theme: 'green', target: nextOccurrence(11, 25), createdAt: now - 40 * DAY },
     { id: 's2', style: 'arc', title: 'Vacaciones en la playa', emoji: '🏖️', theme: 'orange', target: now + 23 * DAY + 5 * 3_600_000, createdAt: now - 12 * DAY },
-    { id: 's3', size: 'm', style: 'rings', title: 'Lanzamiento de la app', emoji: '🚀', theme: 'indigo', target: now + 3 * DAY + 7 * 3_600_000, createdAt: now - 20 * DAY },
+    { id: 's3', w: 2, h: 1, style: 'rings', title: 'Lanzamiento de la app', emoji: '🚀', theme: 'indigo', target: now + 3 * DAY + 7 * 3_600_000, createdAt: now - 20 * DAY },
     { id: 's4', style: 'bar', title: 'Año Nuevo', emoji: '🎉', theme: 'pink', target: nextOccurrence(0, 1), createdAt: now - 30 * DAY },
     { id: 's5', style: 'digits', title: 'Concierto', emoji: '🎵', theme: 'blue', target: now + 9 * 3_600_000 + 42 * 60_000, createdAt: now - 6 * DAY },
     { id: 's7', style: 'weeks', title: 'Cumpleaños de mamá', emoji: '🎂', theme: 'pink', target: now + 48 * DAY, createdAt: now - 60 * DAY },
@@ -31,11 +32,10 @@ function load() {
     if (raw) {
       const xs = JSON.parse(raw).map((x) => (['flip', 'liquid'].includes(x.style) ? { ...x, style: 'digits' } : x));
       // Datos de antes de que existieran los tamaños: aplica los del ejemplo.
-      if (!xs.some((x) => x.size)) {
-        const demo = { s1: 'l', s3: 'm' };
-        return xs.map((x) => (demo[x.id] ? { ...x, size: demo[x.id] } : x));
-      }
-      return xs;
+      const demo = { s1: 'l', s3: 'm' };
+      const sized = xs.some((x) => x.size || x.w) ? xs : xs.map((x) => (demo[x.id] ? { ...x, size: demo[x.id] } : x));
+      // Tamaños fijos (chico/mediano/grande) → celdas libres w×h.
+      return sized.map(({ size, ...x }) => ({ ...x, ...dims({ size, ...x }) }));
     }
   } catch {
     // almacenamiento bloqueado o corrupto: se arranca con datos de ejemplo

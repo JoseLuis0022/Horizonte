@@ -63,7 +63,7 @@ function DigitsViz({ t, theme, size }) {
 }
 
 /* ───────────── Anillos (Actividad) ───────────── */
-function Arc({ r, stroke, value, color, gradId, delay }) {
+export function Arc({ r, stroke, value, color, gradId, delay }) {
   return (
     <>
       <circle cx="50" cy="50" r={r} fill="none" stroke={color} strokeOpacity={0.15} strokeWidth={stroke} />
@@ -173,7 +173,7 @@ function BarViz({ t, p, theme, size }) {
 }
 
 /* ───────────── Puntitos ───────────── */
-function lerpColor(a, b, k) {
+export function lerpColor(a, b, k) {
   const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
   const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
   return `rgb(${pa.map((v, i) => Math.round(v + (pb[i] - v) * k)).join(',')})`;
@@ -294,7 +294,7 @@ function ArcViz({ t, p, theme, size }) {
 }
 
 // Segundero: el arco interior se llena con los segundos del minuto en curso.
-function SecondHand({ seconds, color, lg }) {
+export function SecondHand({ seconds, color, lg }) {
   const frac = (60 - seconds) / 60;
   return (
     <g>
@@ -313,7 +313,7 @@ function SecondHand({ seconds, color, lg }) {
   );
 }
 
-const ArcTicks = memo(function ArcTicks({ p, from, to, lg }) {
+export const ArcTicks = memo(function ArcTicks({ p, from, to, lg }) {
   const theme = { from, to };
   const n = lg ? 48 : 32;
   const lit = Math.round(p * (n - 1));
@@ -361,7 +361,7 @@ const ArcTicks = memo(function ArcTicks({ p, from, to, lg }) {
 /* ───────────── Semanas (calendario) ───────────── */
 // Índice de día en hora LOCAL (no UTC), para que "hoy" y el día de la
 // semana coincidan con el calendario del usuario.
-const localDay = (ts) => (ts - new Date(ts).getTimezoneOffset() * 60_000) / DAY;
+export const localDay = (ts) => (ts - new Date(ts).getTimezoneOffset() * 60_000) / DAY;
 
 function WeeksViz({ t, theme, size, item }) {
   const lg = size === 'lg';
