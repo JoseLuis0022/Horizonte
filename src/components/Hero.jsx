@@ -19,6 +19,7 @@ export const Hero = memo(forwardRef(function Hero({ item, featured, onOpen }, re
     <motion.div
       ref={ref}
       layoutId={`hero-${item.id}`}
+      data-open={`hero-${item.id}`}
       transition={springLayout}
       initial={{ opacity: 0, y: 16, filter: 'blur(10px)' }}
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }}

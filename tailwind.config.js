@@ -36,7 +36,7 @@ export default {
         bg: 'var(--bg)',
         surface: { 1: 'var(--surface-1)', 2: 'var(--surface-2)' },
         hairline: 'var(--hairline)',
-        text: { 1: 'var(--text-1)', 2: 'var(--text-2)', 3: 'var(--text-3)' },
+        text: { 1: 'rgb(var(--text-1-rgb) / <alpha-value>)', 2: 'rgb(var(--text-2-rgb) / <alpha-value>)', 3: 'rgb(var(--text-3-rgb) / <alpha-value>)' },
         accent: { DEFAULT: 'var(--accent)', soft: 'var(--accent-soft)' },
         danger: { DEFAULT: 'var(--danger)', soft: 'var(--danger-soft)' },
       },

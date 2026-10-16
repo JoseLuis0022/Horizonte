@@ -77,8 +77,10 @@ export function CardContent({ item, index = 0, editing = false, withLayoutIds = 
         {ring}
       </div>
       {info}
-      {/* En la tarjeta grande la visualización ocupa y se centra en el espacio libre */}
-      <div className={cn('relative', big ? 'flex flex-1 flex-col justify-center pt-8' : 'mt-auto pt-6')}>{body}</div>
+      {/* En la tarjeta grande la visualización ocupa y se centra en el espacio libre.
+          contain:size evita que su contenido estire las filas del grid: la altura
+          la ponen las tarjetas chicas y la grande se adapta a 2 filas. */}
+      <div className={cn('relative', big ? 'flex min-h-0 flex-1 flex-col justify-center pt-6 sm:[container-type:size]' : 'mt-auto pt-6')}>{body}</div>
     </div>
   );
 }
@@ -144,6 +146,7 @@ export const CountdownCard = forwardRef(function CountdownCard({ item, index, on
     <motion.div
       ref={setRefs}
       layoutId={`card-${item.id}`}
+      data-open={`card-${item.id}`}
       transition={springLayout}
       initial={{ opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1, transition: { ...springSoft, delay: 0.25 + index * 0.05 } }}

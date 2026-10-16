@@ -33,7 +33,7 @@ export default function App() {
   useNowSelector(useCallback((t) => items.map((c) => (c.target <= t ? 1 : 0)).join(''), [items]));
   const now = getNow();
   const [filter, setFilter] = useState('upcoming');
-  const [selected, setSelected] = useState(null); // { id, origin: 'card' | 'hero' }
+  const [selected, setSelected] = useState(null); // { id, origin: 'card' | 'hero' | 'upnext', offset }
   const [composer, setComposer] = useState(null); // { initial?, origin }
   const [toast, setToast] = useState(null);
   const [editing, setEditing] = useState(false);
@@ -58,6 +58,9 @@ export default function App() {
     setComposer({ origin: originOffset(el) });
   }, []);
   const closeDetail = useCallback(() => setSelected(null), []);
+  const openDetail = useCallback((id, origin) => {
+    setSelected({ id, origin, offset: originOffset(document.querySelector(`[data-open="${origin}-${id}"]`)) });
+  }, []);
   const closeComposer = useCallback(() => setComposer(null), []);
   const dismissToast = useCallback(() => setToast(null), []);
   const toggleFeatured = useCallback((id) => setFeaturedId((f) => (f === id ? null : id)), [setFeaturedId]);
@@ -133,7 +136,7 @@ export default function App() {
                 key={heroItem.id}
                 item={heroItem}
                 featured={Boolean(featured)}
-                onOpen={() => setSelected({ id: heroItem.id, origin: 'hero' })}
+                onOpen={() => openDetail(heroItem.id, 'hero')}
               />
             ) : (
               <HeroEmpty key="empty" onCreate={openCreate} />
@@ -144,7 +147,7 @@ export default function App() {
               <UpNext
                 items={later}
                 total={items.length}
-                onOpen={(id) => setSelected({ id, origin: 'upnext' })}
+                onOpen={(id) => openDetail(id, 'upnext')}
                 onSeeAll={() => {
                   setFilter('all');
                   document.getElementById('countdowns')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -183,7 +186,7 @@ export default function App() {
             onDragCancel={endDrag}
           >
             <SortableContext items={visible.map((c) => c.id)} strategy={noStrategy}>
-              <div className="mt-6 grid grid-cols-1 gap-4 [grid-auto-flow:dense] [grid-auto-rows:1fr] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-[1900px]:grid-cols-5 min-[2300px]:grid-cols-6">
+              <div className="mt-6 grid grid-cols-1 gap-4 [grid-auto-flow:dense] sm:[grid-auto-rows:minmax(272px,1fr)] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-[1900px]:grid-cols-5 min-[2300px]:grid-cols-6">
                 <AnimatePresence mode="popLayout">
                   {visible.length === 0 ? (
                     <EmptyState key={`empty-${filter}`} filter={filter} onCreate={openCreate} />
@@ -195,7 +198,7 @@ export default function App() {
                         index={i}
                         editing={editing}
                         featured={item.id === featuredId}
-                        onOpen={() => setSelected({ id: item.id, origin: 'card' })}
+                        onOpen={() => openDetail(item.id, 'card')}
                         onResize={(size) => update(item.id, { size })}
                         onFeature={() => toggleFeatured(item.id)}
                       />
@@ -221,6 +224,7 @@ export default function App() {
             key={`detail-${selectedItem.id}`}
             item={selectedItem}
             origin={selected.origin}
+            offset={selected.offset}
             featured={selectedItem.id === featuredId}
             onClose={closeDetail}
             onEdit={(e) => handleEdit(selectedItem, e)}

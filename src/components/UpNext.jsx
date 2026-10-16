@@ -54,6 +54,7 @@ const UpNextRow = memo(function UpNextRow({ item, onOpen }) {
   return (
     <motion.button
       layoutId={`upnext-${item.id}`}
+      data-open={`upnext-${item.id}`}
       transition={springLayout}
       onClick={onOpen}
       whileTap={{ scale: 0.98 }}

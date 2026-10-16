@@ -11,7 +11,8 @@ import { Button, IconButton } from './Button';
 import { breakdown, formatLongDate, formatTime, progress, relative } from '../lib/time';
 import { getTheme } from '../lib/themes';
 import { useNow, useNowSelector } from '../lib/useNow';
-import { springBouncy, springLayout, springSoft } from '../lib/motion';
+import { springBouncy, springSoft } from '../lib/motion';
+import { emerge } from '../lib/origin';
 
 const contentIn = {
   hidden: { opacity: 0, y: 12 },
@@ -19,16 +20,18 @@ const contentIn = {
   exit: { opacity: 0, transition: { duration: 0.1 } },
 };
 
-// El panel (nodo con layoutId) no escucha el reloj; DetailBody sí.
-export function DetailView({ item, origin, featured, onClose, onEdit, onDelete, onStyle, onFeature }) {
+// El panel emerge desde el elemento que lo abrió (offset) en lugar de compartir
+// layoutId con la tarjeta: abrir y cerrar rápido varias veces dejaba piezas
+// huérfanas. El panel no escucha el reloj; DetailBody sí.
+export function DetailView({ item, origin, offset, featured, onClose, onEdit, onDelete, onStyle, onFeature }) {
   const theme = getTheme(item.theme);
   const done = useNowSelector(useCallback((now) => item.target <= now, [item.target]));
 
   return (
     <Overlay onClose={onClose}>
       <motion.div
-        layoutId={`${origin}-${item.id}`}
-        transition={springLayout}
+        {...emerge(offset)}
+        transition={springSoft}
         style={{ borderRadius: 32 }}
         role="dialog"
         aria-modal="true"
@@ -67,7 +70,7 @@ function DetailBody({ item, theme, origin, featured, onClose, onEdit, onDelete, 
   return (
         <div className="relative p-6 sm:p-10">
           <div className="flex items-start justify-between">
-            <EmojiTile emoji={item.emoji} theme={theme} size={72} layoutId={`${origin}-emoji-${item.id}`} />
+            <EmojiTile emoji={item.emoji} theme={theme} size={72} />
             <motion.div variants={contentIn} custom={0} initial="hidden" animate="visible" exit="exit">
               <IconButton aria-label="Cerrar" onClick={onClose}>
                 <X size={20} />
