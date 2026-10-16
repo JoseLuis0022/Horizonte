@@ -14,6 +14,7 @@ import { EmptyState } from './components/EmptyState';
 import { UpNext } from './components/UpNext';
 import { AmbientBackground } from './components/AmbientBackground';
 import { Toast } from './components/Toast';
+import { UpdatePrompt } from './components/UpdatePrompt';
 import { Button } from './components/Button';
 import { useCountdowns } from './lib/store';
 import { getNow, useNowSelector } from './lib/useNow';
@@ -277,6 +278,7 @@ export default function App() {
       </AnimatePresence>
 
       <Toast toast={toast} onDismiss={dismissToast} />
+      <UpdatePrompt />
     </LayoutGroup>
   );
 }

@@ -5,6 +5,8 @@ import App from './App';
 import { NowProvider } from './lib/useNow';
 import './index.css';
 
+console.info(`Horizonte ${__APP_VERSION__}`);
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     {/* reducedMotion="user": con prefers-reduced-motion, Framer quita el
